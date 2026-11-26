@@ -1,0 +1,66 @@
+/*
+ * Copyright (c) 2025 FredForte
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
+#include <zephyr/dt-bindings/input/input-event-codes.h>
+/* Reference: https://docs.zephyrproject.org/apidoc/latest/group__input__events.html */
+
+#include <input/processors.dtsi>
+
+/ {
+    chosen {
+        zmk,kscan = &kscan0;
+    };
+
+    /*
+     * Direct GPIO input for the joystick module's built-in push button (SW).
+     * Wire SW between nice!nano v2 pin 115 (P1.15 / Pro Micro D18) and GND.
+     */
+    kscan0: kscan {
+        compatible = "zmk,kscan-gpio-direct";
+        wakeup-source;
+        input-gpios
+            = <&pro_micro 18 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>
+            ;
+    };
+};
+
+&adc {
+    status = "okay";
+};
+
+/ {
+    anin0: analog_input_0 {
+        compatible = "zmk,analog-input";
+        sampling-hz = <100>;
+        x-ch {
+            io-channels = <&adc 5>; /* nice!nano v2 pin 029 (P0.29 / AIN5) */
+            mv-mid = <512>;
+            mv-min-max = <10>;
+            mv-deadzone = <100>;
+            scale-multiplier = <1>;
+            scale-divisor = <1>;
+            invert;
+            evt-type = <INPUT_EV_REL>;
+            input-code = <INPUT_REL_X>;
+        };
+        y-ch {
+            io-channels = <&adc 7>; /* nice!nano v2 pin 031 (P0.31 / AIN7) */
+            mv-mid = <512>;
+            mv-min-max = <10>;
+            mv-deadzone = <100>;
+            scale-multiplier = <1>;
+            scale-divisor = <1>;
+            invert;
+            evt-type = <INPUT_EV_REL>;
+            input-code = <INPUT_REL_Y>;
+        };
+    };
+
+    joystick_listener {
+        compatible = "zmk,input-listener";
+        device = <&anin0>;
+    };
+};

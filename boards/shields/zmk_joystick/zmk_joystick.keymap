@@ -1,0 +1,20 @@
+/*
+ * Copyright (c) 2025 FredForte
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
+#include <behaviors.dtsi>
+#include <dt-bindings/zmk/pointing.h>
+
+/ {
+    keymap {
+        compatible = "zmk,keymap";
+
+        default_layer {
+            bindings = <
+                &mkp LCLK
+            >;
+        };
+    };
+};

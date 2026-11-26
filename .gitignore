@@ -1,0 +1,23 @@
+# West / Zephyr local build workspace artifacts
+.west/
+build/
+modules/
+tools/
+zephyr/*
+!zephyr/module.yml
+zmk/
+zmk-analog-input-driver/
+
+# Compiled firmware
+*.uf2
+*.hex
+*.bin
+*.elf
+
+# OS & editor files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/
+.idea/
