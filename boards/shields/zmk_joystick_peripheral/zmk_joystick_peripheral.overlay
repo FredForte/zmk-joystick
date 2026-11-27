@@ -1,0 +1,71 @@
+/*
+ * Copyright (c) 2025 FredForte
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Split-keyboard peripheral sensor shield for a joystick physically wired to
+ * the peripheral half (paired with zmk_joystick_central on the central half).
+ *
+ * Reads the 2-axis analog joystick (with oversampling-free VDDH battery fix)
+ * and forwards input events over BLE via zmk,input-split (reg = <0>).
+ */
+
+#include <zephyr/dt-bindings/input/input-event-codes.h>
+
+/ {
+    chosen {
+        zmk,battery = &vbatt_no_os;
+    };
+
+    vbatt_no_os: vbatt_no_os {
+        compatible = "zmk,battery-nrf-vddh-no-os";
+    };
+};
+
+&vbatt {
+    status = "disabled";
+};
+
+&adc {
+    status = "okay";
+};
+
+/ {
+    anin0: analog_input_0 {
+        compatible = "zmk,analog-input";
+        sampling-hz = <100>;
+        x_ch: x-ch {
+            io-channels = <&adc 5>; /* nice!nano v2 pin 029 (P0.29 / AIN5) */
+            mv-mid = <1650>;
+            mv-min-max = <1600>;
+            mv-deadzone = <60>;
+            scale-multiplier = <1>;
+            scale-divisor = <80>;
+            invert;
+            evt-type = <INPUT_EV_REL>;
+            input-code = <INPUT_REL_X>;
+        };
+        y_ch: y-ch {
+            io-channels = <&adc 7>; /* nice!nano v2 pin 031 (P0.31 / AIN7) */
+            mv-mid = <1650>;
+            mv-min-max = <1600>;
+            mv-deadzone = <60>;
+            scale-multiplier = <1>;
+            scale-divisor = <80>;
+            invert;
+            evt-type = <INPUT_EV_REL>;
+            input-code = <INPUT_REL_Y>;
+        };
+    };
+
+    split_inputs {
+        #address-cells = <1>;
+        #size-cells = <0>;
+
+        joystick_split: joystick_split@0 {
+            compatible = "zmk,input-split";
+            reg = <0>;
+            device = <&anin0>;
+        };
+    };
+};

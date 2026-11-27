@@ -1,0 +1,18 @@
+# Copyright (c) 2025 FredForte
+# SPDX-License-Identifier: MIT
+
+if SHIELD_ZMK_JOYSTICK_ADDON
+
+config ZMK_POINTING
+    default y
+
+config ADC
+    default y
+
+config ADC_ASYNC
+    default y
+
+config ANALOG_INPUT
+    default y
+
+endif

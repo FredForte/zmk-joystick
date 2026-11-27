@@ -1,0 +1,8 @@
+# CI verification matrix for composable add-on shields (unibody + split)
+include:
+  - board: nice_nano_v2
+    shield: reviung41 zmk_joystick_addon
+  - board: nice_nano_v2
+    shield: corne_left zmk_joystick_central
+  - board: nice_nano_v2
+    shield: corne_right zmk_joystick_peripheral

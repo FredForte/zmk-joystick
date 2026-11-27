@@ -1,0 +1,8 @@
+file_format: "1"
+id: zmk_joystick_addon
+name: ZMK Joystick Add-on (Unibody / Split Central)
+type: shield
+url: https://github.com/FredForte/zmk-joystick
+requires: [nice_nano_v2]
+features:
+  - pointer

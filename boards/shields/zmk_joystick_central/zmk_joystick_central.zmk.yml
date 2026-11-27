@@ -1,0 +1,8 @@
+file_format: "1"
+id: zmk_joystick_central
+name: ZMK Joystick Add-on (Split Central Receiver)
+type: shield
+url: https://github.com/FredForte/zmk-joystick
+requires: [nice_nano_v2]
+features:
+  - pointer

@@ -13,11 +13,13 @@ Out of the box, the shield reads two analog potentiometer axes over the nRF52840
 
 ## Table of Contents
 
+- [Quick Install Into Any ZMK Config (CLI & AI Agents)](#quick-install-into-any-zmk-config-cli--ai-agents)
 - [Hardware Requirements](#hardware-requirements)
 - [Wiring & Pinout](#wiring--pinout)
 - [Why These Specific Pins (`P0.29` / `AIN5` and `P0.31` / `AIN7`)?](#why-these-specific-pins-p029--ain5-and-p031--ain7)
 - [Fixing the 1-Minute nRF52840 SAADC Freeze (Zero-Fork)](#fixing-the-1-minute-nrf52840-saadc-freeze-zero-fork)
-- [Adapting This Reference to Your Own ZMK Config](#adapting-this-reference-to-your-own-zmk-config)
+- [Composable Add-On Shields (Unibody & Split Keyboards)](#composable-add-on-shields-unibody--split-keyboards)
+- [Adapting This Reference Manually](#adapting-this-reference-manually)
 - [Scroll Mode (ZMK Input Processors)](#scroll-mode-zmk-input-processors)
 - [Joystick Calibration & Tuning](#joystick-calibration--tuning)
 - [Building & Flashing](#building--flashing)
@@ -25,6 +27,33 @@ Out of the box, the shield reads two analog potentiometer axes over the nRF52840
 - [Troubleshooting](#troubleshooting)
 - [Contributing](#contributing)
 - [Credits & License](#credits--license)
+
+---
+
+## Quick Install Into Any ZMK Config (CLI & AI Agents)
+
+`zmk-joystick` ships composable add-on shields **plus** a zero-dependency Python 3 CLI ([`scripts/zmk_joystick.py`](scripts/zmk_joystick.py)) that automatically inspects your ZMK config, detects `nice!nano v2` SAADC pin collisions (including across upstream in-tree shields like Corne, Lily58, Sofle, Kyria, and Sweep), and configures unibody or split keyboards cleanly.
+
+### For Humans (Interactive Wizard)
+
+Run from inside your existing ZMK config repo (no clone or `pip install` needed):
+
+```bash
+curl -sSL https://raw.githubusercontent.com/FredForte/zmk-joystick/main/scripts/zmk_joystick.py | python3 - setup
+```
+
+### For AI Coding Agents (Antigravity, Claude Code, Cursor, Codex)
+
+This repo includes a standard [`SKILL.md`](SKILL.md) and structured JSON commands (`inspect --json`, `apply --dry-run --json`, `apply --json`, `validate --json`). Tell your agent:
+
+> *"Follow `https://github.com/FredForte/zmk-joystick/blob/main/SKILL.md` to inspect this ZMK config for pin conflicts and install `zmk-joystick`."*
+
+```bash
+# Non-interactive agent workflow:
+python3 scripts/zmk_joystick.py inspect --target /path/to/zmk-config --json
+python3 scripts/zmk_joystick.py apply --target /path/to/zmk-config --mode split-peripheral --scroll-layer 3 --dry-run --json
+python3 scripts/zmk_joystick.py validate --target /path/to/zmk-config --json
+```
 
 ---
 
@@ -114,7 +143,30 @@ A well-known issue when using analog joysticks on a `nice!nano v2` with stock ZM
 
 ---
 
-## Adapting This Reference to Your Own ZMK Config
+## Composable Add-On Shields (Unibody & Split Keyboards)
+
+In addition to the standalone `zmk_joystick` reference shield, this module ships three **composable add-on shields** (like ZMK's `nice_view`) that never touch your existing `kscan` or `keymap` and automatically include the zero-fork `vbatt_no_os` battery fix:
+
+| Keyboard Setup | Shield(s) to Append in `build.yaml` | How It Works |
+| :--- | :--- | :--- |
+| **Unibody** or **Split (joystick on central half)** | `zmk_joystick_addon` on the central/unibody target | Adds `vbatt_no_os`, `&adc`, `&anin0`, and `&joystick_listener` directly on that board |
+| **Split (joystick on peripheral half)** | `zmk_joystick_peripheral` on peripheral + `zmk_joystick_central` on central | Peripheral reads `&anin0` and forwards events over BLE via `zmk,input-split` (`reg = <0>`); central receives them into `&joystick_listener` so layer-based scroll mode works seamlessly |
+
+Example `build.yaml` for a split keyboard with the joystick wired to the **right (peripheral)** half:
+
+```yaml
+include:
+  - board: nice_nano_v2
+    shield: lily58_left zmk_joystick_central
+  - board: nice_nano_v2
+    shield: lily58_right zmk_joystick_peripheral
+```
+
+All add-on shields expose Devicetree labels (`&x_ch`, `&y_ch`, `&anin0`, `&joystick_listener`) so you can override any pin, calibration value, or scroll layer in a few lines inside your keyboard's `.overlay` without duplicating boilerplate.
+
+---
+
+## Adapting This Reference Manually
 
 To add a 2-axis analog joystick (plus the zero-fork battery fix) to your own ZMK repository, copy these four pieces:
 
@@ -351,26 +403,30 @@ The compiled firmware is written to `build/zephyr/zmk.uf2`.
 │   ├── ISSUE_TEMPLATE/
 │   │   ├── bug_report.md                        # Bug report template
 │   │   └── hardware_support.md                  # Hardware / module question template
+│   ├── build-addons.yaml                        # CI matrix verifying unibody & split add-on shields
 │   └── workflows/
-│       └── build.yml                            # ZMK GitHub Actions build workflow
-├── boards/shields/zmk_joystick/
-│   ├── Kconfig.shield                           # Shield Kconfig symbol (SHIELD_ZMK_JOYSTICK)
-│   ├── Kconfig.defconfig                        # Shield defaults (name, pointing, ADC, analog driver)
-│   ├── zmk_joystick.zmk.yml                     # Shield metadata
-│   ├── zmk_joystick.conf                        # ADC, pointing, and optional debug logging config
-│   ├── zmk_joystick.overlay                     # Devicetree: ADC, 2-axis joystick, SW button & no-OS vbatt
-│   └── zmk_joystick.keymap                      # 2-layer keymap (SW tap → left click, hold → scroll layer)
+│       └── build.yml                            # ZMK GitHub Actions build + add-on CI verification
+├── boards/shields/
+│   ├── zmk_joystick/                            # Standalone reference shield (joystick + SW click/scroll)
+│   ├── zmk_joystick_addon/                      # Composable add-on shield (unibody / split central)
+│   ├── zmk_joystick_central/                    # Composable add-on shield (split central receiver)
+│   └── zmk_joystick_peripheral/                 # Composable add-on shield (split peripheral sensor)
 ├── config/
 │   └── west.yml                                 # West manifest (ZMK v0.3 + zmk-analog-input-driver)
 ├── drivers/sensor/
 │   └── battery_nrf_vddh_no_os.c                 # Replacement VDDH battery driver (oversampling = 0)
 ├── dts/bindings/sensor/
 │   └── zmk,battery-nrf-vddh-no-os.yaml          # Devicetree binding for the no-oversampling battery driver
+├── scripts/
+│   └── zmk_joystick.py                          # Dual-mode setup, pin-collision inspector & validator CLI
+├── tests/
+│   └── test_zmk_joystick_cli.py                 # Unit tests for scripts/zmk_joystick.py
 ├── zephyr/
 │   └── module.yml                               # Registers this repo as a Zephyr module (boards, DTS, driver)
 ├── CMakeLists.txt                               # Builds the no-oversampling battery driver when enabled
 ├── Kconfig                                      # Kconfig option for ZMK_BATTERY_NRF_VDDH_NO_OS
-├── build.yaml                                   # GitHub Actions build matrix
+├── SKILL.md                                     # AI agent skill instructions (inspect -> apply -> validate)
+├── build.yaml                                   # Standalone firmware build matrix
 ├── CONTRIBUTING.md                              # Contribution guidelines
 ├── LICENSE                                      # MIT License
 └── README.md                                    # Documentation & pinout reference
@@ -403,8 +459,8 @@ If you hit this in a separate ZMK repo where you haven't included the `zmk,batte
 Continuous ADC polling draws noticeably more current than a passive switch matrix:
 
 - Keep `CONFIG_ANALOG_INPUT_LOG_DBG_*` disabled outside calibration.
-- Lower `sampling-hz` (e.g., from `100` to `50`).
-- For dedicated low-power wireless builds, consider [`badjeff/analog-axis-hires-input-zephyr-module`](https://github.com/badjeff/analog-axis-hires-input-zephyr-module), which adds polling downshift and GPIO-switchable power rails.
+- Lower `sampling-hz` (e.g., from `100` to `50` or `60`).
+- Use a larger LiPo battery or power-switch the joystick module when using the keyboard purely for typing.
 
 ---
 

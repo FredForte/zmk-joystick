@@ -1,0 +1,9 @@
+# Copyright (c) 2025 FredForte
+# SPDX-License-Identifier: MIT
+
+if SHIELD_ZMK_JOYSTICK_CENTRAL
+
+config ZMK_POINTING
+    default y
+
+endif

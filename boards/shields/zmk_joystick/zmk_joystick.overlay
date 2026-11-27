@@ -50,7 +50,7 @@
     anin0: analog_input_0 {
         compatible = "zmk,analog-input";
         sampling-hz = <100>;
-        x-ch {
+        x_ch: x-ch {
             io-channels = <&adc 5>; /* nice!nano v2 pin 029 (P0.29 / AIN5) */
             mv-mid = <1650>;        /* ~3.3V / 2 resting midpoint in millivolts */
             mv-min-max = <1600>;    /* full-scale +/- deflection in millivolts */
@@ -61,7 +61,7 @@
             evt-type = <INPUT_EV_REL>;
             input-code = <INPUT_REL_X>;
         };
-        y-ch {
+        y_ch: y-ch {
             io-channels = <&adc 7>; /* nice!nano v2 pin 031 (P0.31 / AIN7) */
             mv-mid = <1650>;        /* ~3.3V / 2 resting midpoint in millivolts */
             mv-min-max = <1600>;    /* full-scale +/- deflection in millivolts */
@@ -74,7 +74,7 @@
         };
     };
 
-    joystick_listener {
+    joystick_listener: joystick_listener {
         compatible = "zmk,input-listener";
         device = <&anin0>;
 
@@ -82,7 +82,7 @@
          * Layer 1 (scroll_layer): switch joystick from cursor movement to
          * vertical/horizontal scrolling while holding SW (or any &mo 1 key).
          */
-        scroller {
+        joystick_scroller: scroller {
             layers = <1>;
             input-processors
                 = <&zip_xy_to_scroll_mapper>
