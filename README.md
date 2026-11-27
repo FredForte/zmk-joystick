@@ -221,7 +221,7 @@ See [`boards/shields/zmk_joystick/zmk_joystick.overlay`](boards/shields/zmk_joys
             layers = <1>;
             input-processors
                 = <&zip_xy_to_scroll_mapper>
-                , <&zip_scroll_scaler 1 16>
+                , <&zip_scroll_scaler 1 128>
                 , <&zip_scroll_transform INPUT_TRANSFORM_Y_INVERT>
                 ;
         };
@@ -255,7 +255,7 @@ On a full keyboard, you don't need to use `SW` — bind any modifier key to `&mo
 
 Inside the `scroller` block of [`zmk_joystick.overlay`](boards/shields/zmk_joystick/zmk_joystick.overlay):
 
-- **Scroll speed**: Adjust `&zip_scroll_scaler 1 16` — increase the second number (e.g. `1 24`) to scroll slower, or decrease it (e.g. `1 8`) to scroll faster.
+- **Scroll speed**: Adjust `&zip_scroll_scaler 1 128` — increase the second number (e.g. `1 180`) to scroll slower, or decrease it (e.g. `1 64`) to scroll faster.
 - **Scroll direction**: Remove `, <&zip_scroll_transform INPUT_TRANSFORM_Y_INVERT>` if you prefer inverted ("natural") vertical scrolling, or swap it for `INPUT_TRANSFORM_X_INVERT` to flip horizontal scroll.
 
 ---
