@@ -7,7 +7,7 @@
 
 A [ZMK Firmware](https://zmk.dev/) **reference implementation** for adding a 2-axis analog joystick (thumbstick) with push-button click to an **nRF52840 / `nice!nano v2`** controller using [`badjeff/zmk-analog-input-driver`](https://github.com/badjeff/zmk-analog-input-driver).
 
-Out of the box, the shield reads two analog potentiometer axes over the nRF52840 SAADC peripheral (`INPUT_REL_X` / `INPUT_REL_Y`), maps the joystick module's built-in push button (`SW`) to left mouse click (`&mkp LCLK`), and includes a **zero-fork fix for the known nRF52840 1-minute SAADC battery-polling freeze** while keeping Bluetooth battery percentage reporting active.
+Out of the box, the shield reads two analog potentiometer axes over the nRF52840 SAADC peripheral (`INPUT_REL_X` / `INPUT_REL_Y`), uses the joystick's push button (`SW`) as **tap for left click / hold for scroll mode** via ZMK Input Processors (`&zip_xy_to_scroll_mapper`), and includes a **zero-fork fix for the known nRF52840 1-minute SAADC battery-polling freeze** while keeping Bluetooth battery percentage reporting active.
 
 ---
 
@@ -18,6 +18,7 @@ Out of the box, the shield reads two analog potentiometer axes over the nRF52840
 - [Why These Specific Pins (`P0.29` / `AIN5` and `P0.31` / `AIN7`)?](#why-these-specific-pins-p029--ain5-and-p031--ain7)
 - [Fixing the 1-Minute nRF52840 SAADC Freeze (Zero-Fork)](#fixing-the-1-minute-nrf52840-saadc-freeze-zero-fork)
 - [Adapting This Reference to Your Own ZMK Config](#adapting-this-reference-to-your-own-zmk-config)
+- [Scroll Mode (ZMK Input Processors)](#scroll-mode-zmk-input-processors)
 - [Joystick Calibration & Tuning](#joystick-calibration--tuning)
 - [Building & Flashing](#building--flashing)
 - [Repository Structure](#repository-structure)
@@ -47,7 +48,7 @@ All five connections of a standard 2-axis thumbstick module land cleanly on the 
 | **VCC** | `VCC` (`3.3V`) | — | `VCC` | 3.3V power rail | Potentiometer supply |
 | **VRy (Y-Axis)** | `031` | `P0.31` | `D21` / `A3` | `io-channels = <&adc 7>;` (`AIN7`) | Vertical cursor movement (`INPUT_REL_Y`) |
 | **VRx (X-Axis)** | `029` | `P0.29` | `D20` / `A2` | `io-channels = <&adc 5>;` (`AIN5`) | Horizontal cursor movement (`INPUT_REL_X`) |
-| **SW (Click)** *(optional)* | `115` | `P1.15` | `D18` / `A0` | `<&pro_micro 18 (GPIO_ACTIVE_LOW \| GPIO_PULL_UP)>` | Left click (`&mkp LCLK`) |
+| **SW (Click)** *(optional)* | `115` | `P1.15` | `D18` / `A0` | `<&pro_micro 18 (GPIO_ACTIVE_LOW \| GPIO_PULL_UP)>` | Tap: left click (`&mkp LCLK`) / Hold: scroll mode (`&mo 1`) |
 
 ```text
           nice!nano v2 (USB-C at top)                  Analog Joystick Module
@@ -163,6 +164,7 @@ See [`boards/shields/zmk_joystick/zmk_joystick.overlay`](boards/shields/zmk_joys
 
 ```dts
 #include <zephyr/dt-bindings/input/input-event-codes.h>
+#include <dt-bindings/zmk/input_transform.h>
 #include <input/processors.dtsi>
 
 / {
@@ -214,6 +216,15 @@ See [`boards/shields/zmk_joystick/zmk_joystick.overlay`](boards/shields/zmk_joys
     joystick_listener {
         compatible = "zmk,input-listener";
         device = <&anin0>;
+
+        scroller {
+            layers = <1>;
+            input-processors
+                = <&zip_xy_to_scroll_mapper>
+                , <&zip_scroll_scaler 1 16>
+                , <&zip_scroll_transform INPUT_TRANSFORM_Y_INVERT>
+                ;
+        };
     };
 };
 ```
@@ -227,6 +238,25 @@ include:
   - board: nice_nano_v2
     shield: zmk_joystick
 ```
+
+---
+
+## Scroll Mode (ZMK Input Processors)
+
+This reference demonstrates ZMK's layer-aware **Input Processors** to turn the same joystick into a vertical/horizontal scroll wheel while a modifier key is held:
+
+- **Tap `SW`** → Left mouse click (`&mkp LCLK`)
+- **Hold `SW` (`≥ 200 ms`) + move joystick** → Activates Layer 1 (`scroll_layer`), switching the joystick from pointer movement to scrolling
+- **Double-tap & hold `SW`** → Holds left click for click-and-drag (`quick-tap-ms = <200>`)
+
+On a full keyboard, you don't need to use `SW` — bind any modifier key to `&mo 1` (or change `layers = <1>;` in [`zmk_joystick.overlay`](boards/shields/zmk_joystick/zmk_joystick.overlay) to match your preferred layer index).
+
+### Tuning Scroll Behavior
+
+Inside the `scroller` block of [`zmk_joystick.overlay`](boards/shields/zmk_joystick/zmk_joystick.overlay):
+
+- **Scroll speed**: Adjust `&zip_scroll_scaler 1 16` — increase the second number (e.g. `1 24`) to scroll slower, or decrease it (e.g. `1 8`) to scroll faster.
+- **Scroll direction**: Remove `, <&zip_scroll_transform INPUT_TRANSFORM_Y_INVERT>` if you prefer inverted ("natural") vertical scrolling, or swap it for `INPUT_TRANSFORM_X_INVERT` to flip horizontal scroll.
 
 ---
 
@@ -329,7 +359,7 @@ The compiled firmware is written to `build/zephyr/zmk.uf2`.
 │   ├── zmk_joystick.zmk.yml                     # Shield metadata
 │   ├── zmk_joystick.conf                        # ADC, pointing, and optional debug logging config
 │   ├── zmk_joystick.overlay                     # Devicetree: ADC, 2-axis joystick, SW button & no-OS vbatt
-│   └── zmk_joystick.keymap                      # 1-button keymap (SW → left click)
+│   └── zmk_joystick.keymap                      # 2-layer keymap (SW tap → left click, hold → scroll layer)
 ├── config/
 │   └── west.yml                                 # West manifest (ZMK v0.3 + zmk-analog-input-driver)
 ├── drivers/sensor/

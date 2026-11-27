@@ -8,12 +8,34 @@
 #include <dt-bindings/zmk/pointing.h>
 
 / {
+    behaviors {
+        /*
+         * Tap: left click (&mkp LCLK)
+         * Hold (>= 200 ms): activate Layer 1 (scroll_layer) for joystick scrolling
+         * Double-tap & hold: hold left click for click-and-drag
+         */
+        sw_scroll: sw_scroll {
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            flavor = "hold-preferred";
+            tapping-term-ms = <200>;
+            quick-tap-ms = <200>;
+            bindings = <&mo>, <&mkp>;
+        };
+    };
+
     keymap {
         compatible = "zmk,keymap";
 
         default_layer {
             bindings = <
-                &mkp LCLK
+                &sw_scroll 1 LCLK
+            >;
+        };
+
+        scroll_layer {
+            bindings = <
+                &trans
             >;
         };
     };

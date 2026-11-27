@@ -7,6 +7,7 @@
 #include <zephyr/dt-bindings/input/input-event-codes.h>
 /* Reference: https://docs.zephyrproject.org/apidoc/latest/group__input__events.html */
 
+#include <dt-bindings/zmk/input_transform.h>
 #include <input/processors.dtsi>
 
 / {
@@ -76,5 +77,18 @@
     joystick_listener {
         compatible = "zmk,input-listener";
         device = <&anin0>;
+
+        /*
+         * Layer 1 (scroll_layer): switch joystick from cursor movement to
+         * vertical/horizontal scrolling while holding SW (or any &mo 1 key).
+         */
+        scroller {
+            layers = <1>;
+            input-processors
+                = <&zip_xy_to_scroll_mapper>
+                , <&zip_scroll_scaler 1 16>
+                , <&zip_scroll_transform INPUT_TRANSFORM_Y_INVERT>
+                ;
+        };
     };
 };
