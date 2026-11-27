@@ -1,0 +1,16 @@
+name: Verify Add-on Shields & CLI
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  test-cli:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run CLI unit tests
+        run: python3 -m unittest discover -s tests -v
+
+  verify-addons:
+    uses: zmkfirmware/zmk/.github/workflows/build-user-config.yml@v0.3
+    with:
+      build_matrix_path: .github/build-addons.yaml
+      archive_name: addons-ci-check

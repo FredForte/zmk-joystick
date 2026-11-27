@@ -4,9 +4,3 @@ on: [push, pull_request, workflow_dispatch]
 jobs:
   build:
     uses: zmkfirmware/zmk/.github/workflows/build-user-config.yml@v0.3
-
-  verify-addons:
-    uses: zmkfirmware/zmk/.github/workflows/build-user-config.yml@v0.3
-    with:
-      build_matrix_path: .github/build-addons.yaml
-      archive_name: addons-ci-check

@@ -405,7 +405,8 @@ The compiled firmware is written to `build/zephyr/zmk.uf2`.
 │   │   └── hardware_support.md                  # Hardware / module question template
 │   ├── build-addons.yaml                        # CI matrix verifying unibody & split add-on shields
 │   └── workflows/
-│       └── build.yml                            # ZMK GitHub Actions build + add-on CI verification
+│       ├── build.yml                            # ZMK GitHub Actions build workflow (standalone firmware)
+│       └── verify-addons.yml                    # CI workflow verifying add-on shields + CLI unit tests
 ├── boards/shields/
 │   ├── zmk_joystick/                            # Standalone reference shield (joystick + SW click/scroll)
 │   ├── zmk_joystick_addon/                      # Composable add-on shield (unibody / split central)
