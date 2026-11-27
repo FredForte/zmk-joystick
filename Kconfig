@@ -1,0 +1,14 @@
+# Copyright (c) 2025 FredForte
+# SPDX-License-Identifier: MIT
+
+DT_COMPAT_ZMK_BATTERY_NRF_VDDH_NO_OS := zmk,battery-nrf-vddh-no-os
+
+config ZMK_BATTERY_NRF_VDDH_NO_OS
+    bool
+    default $(dt_compat_enabled,$(DT_COMPAT_ZMK_BATTERY_NRF_VDDH_NO_OS))
+    select ADC
+    depends on SENSOR
+    help
+        Enable nRF VDDH battery monitoring driver with SAADC oversampling
+        disabled (oversampling = 0) so battery polling can safely share the
+        nRF52840 SAADC peripheral with multi-channel analog inputs.

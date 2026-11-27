@@ -12,6 +12,16 @@
 / {
     chosen {
         zmk,kscan = &kscan0;
+        zmk,battery = &vbatt_no_os;
+    };
+
+    /*
+     * Replace nice!nano v2's default vbatt sensor (which uses SAADC oversampling = 4)
+     * with an oversampling-free VDDH sensor so 60-second battery polling does not
+     * lock up the shared nRF52840 SAADC peripheral.
+     */
+    vbatt_no_os: vbatt_no_os {
+        compatible = "zmk,battery-nrf-vddh-no-os";
     };
 
     /*
@@ -25,6 +35,10 @@
             = <&pro_micro 18 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>
             ;
     };
+};
+
+&vbatt {
+    status = "disabled";
 };
 
 &adc {

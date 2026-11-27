@@ -1,0 +1,7 @@
+# Copyright (c) 2021 The ZMK Contributors
+# Copyright (c) 2025 FredForte
+# SPDX-License-Identifier: MIT
+
+description: Battery SoC monitoring using nRF VDDH without SAADC oversampling
+
+compatible: "zmk,battery-nrf-vddh-no-os"
