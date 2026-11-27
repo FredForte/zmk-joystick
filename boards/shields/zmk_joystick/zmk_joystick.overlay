@@ -37,22 +37,22 @@
         sampling-hz = <100>;
         x-ch {
             io-channels = <&adc 5>; /* nice!nano v2 pin 029 (P0.29 / AIN5) */
-            mv-mid = <512>;
-            mv-min-max = <10>;
-            mv-deadzone = <100>;
+            mv-mid = <1650>;        /* ~3.3V / 2 resting midpoint in millivolts */
+            mv-min-max = <1600>;    /* full-scale +/- deflection in millivolts */
+            mv-deadzone = <60>;     /* ignore +/-60 mV resting drift/jitter */
             scale-multiplier = <1>;
-            scale-divisor = <1>;
+            scale-divisor = <80>;   /* scale mV to smooth cursor steps (0..~19 px/tick) */
             invert;
             evt-type = <INPUT_EV_REL>;
             input-code = <INPUT_REL_X>;
         };
         y-ch {
             io-channels = <&adc 7>; /* nice!nano v2 pin 031 (P0.31 / AIN7) */
-            mv-mid = <512>;
-            mv-min-max = <10>;
-            mv-deadzone = <100>;
+            mv-mid = <1650>;        /* ~3.3V / 2 resting midpoint in millivolts */
+            mv-min-max = <1600>;    /* full-scale +/- deflection in millivolts */
+            mv-deadzone = <60>;     /* ignore +/-60 mV resting drift/jitter */
             scale-multiplier = <1>;
-            scale-divisor = <1>;
+            scale-divisor = <80>;   /* scale mV to smooth cursor steps (0..~19 px/tick) */
             invert;
             evt-type = <INPUT_EV_REL>;
             input-code = <INPUT_REL_Y>;
